@@ -1,10 +1,21 @@
 package com.example.signupsqlite;
 
-import androidx.appcompat.app.AppCompatActivity;
 
+
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -25,10 +36,14 @@ public class MainActivity extends AppCompatActivity {
     Button button_register, buttonReadData, importDBFile, exportDB;
     RegisterDB sqliteDB;
     TextView ReadName, ReadMail;
+    int PERMISSION_CODE = 100;
+    File source;
+
+    int PICKFILE_RESULT_CODE = 1;
     public static final String DATABASE_NAME = "testDB.db";
     public static final String DB_PATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/SignUpDatabase/"+DATABASE_NAME;
-    public static final String DB_NEWPATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/NewDatabase/"+DATABASE_NAME;
-
+    public static final String DB_NEWPATH = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)+"/"+DATABASE_NAME;
+    File DB = new File(DB_PATH);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -46,6 +61,9 @@ public class MainActivity extends AppCompatActivity {
         importDBFile = findViewById(R.id.buttonGetFile);
         exportDB = findViewById(R.id.buttonExpoortDB);
 
+
+        checkPermissions();
+
         // Exporting DB File........
         exportDB.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -60,7 +78,8 @@ public class MainActivity extends AppCompatActivity {
         importDBFile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                importDB();
+//                importDB();
+                PickFile_Db();
 //                Toast.makeText(MainActivity.this, "Click ImportDBFile Button", Toast.LENGTH_SHORT).show();
             }
         });
@@ -83,29 +102,110 @@ public class MainActivity extends AppCompatActivity {
         buttonReadData.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ReadData();
+                if (!DB.exists()) {
+                    Toast.makeText(MainActivity.this, "File Not Found ", Toast.LENGTH_SHORT).show();
+                    return;
+                } else {
+                    ReadData();
+                }
             }
         });
 
     }
 
-    private void importDB() {
-        FileChannel source=null;
-        FileChannel destination=null;
+    private void PickFile_Db() {
+        Intent chooseFile = new Intent(Intent.ACTION_GET_CONTENT);
+        chooseFile.addCategory(Intent.CATEGORY_OPENABLE);
+        chooseFile.setType("*/*");
+        startActivityForResult(
+                Intent.createChooser(chooseFile, "Choose a file"),
+                PICKFILE_RESULT_CODE
+        );
+    }
 
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode,  Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICKFILE_RESULT_CODE && resultCode == Activity.RESULT_OK) {
+            Uri uri = data.getData();
+            String src = uri.getPath();
+            source = new File(src);
+
+            Log.v("Getpath", "getpath:" + source.getPath());
+
+            if (source.exists()) {
+                FileChannel source1 = null;
+                FileChannel destination = null;
+
+                File backupDB = new File(DB_PATH);
+                Log.v("Before import", "Before import");
+                try {
+                    source1 = new FileInputStream(source).getChannel();
+                    destination = new FileOutputStream(backupDB).getChannel();
+                    destination.transferFrom(source1, 0, source1.size());
+                    source1.close();
+                    destination.close();
+                    Log.v("After import", "After import");
+                    Toast.makeText(this, "DB Imported!", Toast.LENGTH_LONG).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else {
+            Toast.makeText(this, "File Not Found Exception !", Toast.LENGTH_SHORT).show();
+        }
+
+
+    }
+
+    private boolean checkPermissions(){
+
+            // If you have access to the external storage, do whatever you need
+            if (Environment.isExternalStorageManager()){
+                // If you don't have access, launch a new activity to show the user the system's dialog
+                // to allow access to the external storage
+            }else{
+                Intent intent = new Intent();
+                intent.setAction(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                Uri uri = Uri.fromParts("package", this.getPackageName(), null);
+                intent.setData(uri);
+                startActivity(intent);
+            }
+
+
+
+            if(ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                return true;
+            }
+            else {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_CODE);
+                return false;
+            }
+        }
+
+
+    private void importDB() {
         File currentDB = new File(DB_NEWPATH);
-        File backupDB = new File(DB_PATH);
-        Log.v("Before import","Before import");
-        try {
-            source = new FileInputStream(currentDB).getChannel();
-            destination = new FileOutputStream(backupDB).getChannel();
-            destination.transferFrom(source, 0, source.size());
-            source.close();
-            destination.close();
-            Log.v("After import","After import");
-            Toast.makeText(this, "DB Imported!", Toast.LENGTH_LONG).show();
-        } catch(IOException e) {
-            e.printStackTrace();
+        if(currentDB.exists()) {
+            FileChannel source = null;
+            FileChannel destination = null;
+
+            File backupDB = new File(DB_PATH);
+            Log.v("Before import", "Before import");
+            try {
+                source = new FileInputStream(currentDB).getChannel();
+                destination = new FileOutputStream(backupDB).getChannel();
+                destination.transferFrom(source, 0, source.size());
+                source.close();
+                destination.close();
+                Log.v("After import", "After import");
+                Toast.makeText(this, "DB Imported!", Toast.LENGTH_LONG).show();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            Toast.makeText(this, "File Not Found Directory !", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -134,22 +234,31 @@ public class MainActivity extends AppCompatActivity {
     private void ReadData() {
         String phone = EnterPhone.getText().toString();
         Cursor res = sqliteDB.readData(phone);
-        if (res.getCount() == 0) {
+//       if(phone.isEmpty()){
+//           EnterPhone.setError("Please Enter PhoneNumber");
+//           EnterPhone.requestFocus();
+//           return;
+//       }
+            if (res.getCount() == 0) {
+                EnterPhone.setError("Please Enter PhoneNumber");
+                EnterPhone.requestFocus();
 
-            Toast.makeText(MainActivity.this, "No data is available", Toast.LENGTH_LONG).show();
+//                Toast.makeText(MainActivity.this, "No data is available", Toast.LENGTH_LONG).show();
+                return;
+            } else {
 
-        } else {
+                if (res.moveToNext()) {
 
-            if (res.moveToNext()) {
+                    String Name = res.getString(1);
+                    String Mail = res.getString(5);
 
-                String Name = res.getString(1);
-                String Mail = res.getString(5);
-
-                ReadName.setText(Name);
-                ReadMail.setText(Mail);
+                    ReadName.setText(Name);
+                    ReadMail.setText(Mail);
+                }
+                EnterPhone.setText("");
             }
         }
-    }
+
 
     public void Submit(){
         String fname = firstname.getText().toString();
