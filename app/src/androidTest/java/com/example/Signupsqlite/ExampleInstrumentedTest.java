@@ -1,4 +1,4 @@
-package com.example.signupsqlite;
+package com.example.Signupsqlite;
 
 import android.content.Context;
 
