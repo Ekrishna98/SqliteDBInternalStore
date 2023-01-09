@@ -8,25 +8,28 @@ import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.ContentUris;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.signupsqlite.R;
 import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.io.Files;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -35,14 +38,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
     EditText firstname, fathername, phonenumber, mail, password;
     EditText EnterPhone;
-    Button button_register, buttonReadData, importDBFile, exportDB;
+    Button button_register, buttonReadData, importDBFile, exportDB, ShowTableData;
     RegisterDB sqliteDB;
-    TextView ReadName, ReadMail;
+    TextView ReadName, ReadMail, ReadTables;
 
     int PERMISSION_CODE = 100;
     int PICKFILE_RESULT_CODE = 1001;
@@ -53,8 +58,6 @@ public class MainActivity extends AppCompatActivity {
 
     File currentDB = new File(DB_PATH);
     File backupDB = new File(DB_NEWPATH);
-
-
 
 
     @SuppressLint("MissingInflatedId")
@@ -71,8 +74,24 @@ public class MainActivity extends AppCompatActivity {
 
         ReadName = findViewById(R.id.tvName);
         ReadMail = findViewById(R.id.tvmail);
+        ReadTables = findViewById(R.id.tvTables);
         importDBFile = findViewById(R.id.buttonGetFile);
         exportDB = findViewById(R.id.buttonExpoortDB);
+        ShowTableData = findViewById(R.id.ShowTableData);
+
+
+        ShowTableData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                startActivity(new Intent(MainActivity.this,ShowTable_Data.class));
+//                try {
+//                    DisplayTable();
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+            }
+        });
 
 
         Log.v("packageName", "PackageName :" + getPackageName());
@@ -115,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                Tabl2Data();
                 Submit();
             }
         });
@@ -128,10 +147,109 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 } else {
                     ReadData();
+                    ReadTableNames();
+                    ReadTable_ColumnNames();
+//                    try {
+////                        ReadTableData();
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
                 }
             }
         });
 
+    }
+
+    private void ReadTable_ColumnNames() {
+        Cursor c = sqliteDB.ReadTable_ColumnNames();
+        String[] columnNames;
+        try {
+            columnNames = c.getColumnNames();
+        } finally {
+            c.close();
+        }
+
+        Log.v("", "Krishna: " + Arrays.toString(columnNames));
+    }
+
+//    private void DisplayTable() throws JSONException {
+//
+//        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.LinearTxtView);
+//        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.WRAP_CONTENT);
+//        layoutParams.setMargins(10, 10, 10, 10);
+//
+//        LinearLayout horizalLinear=null;
+//
+//
+//        for (int columns = 0; columns < arrayData1.length(); columns++) {  //columns
+//
+//                for(int rows=0; rows<arrayData1.length() ;rows++) {  //rows
+//
+//                    horizalLinear=new LinearLayout(this);
+//                    horizalLinear.setOrientation(LinearLayout.HORIZONTAL);
+//
+//                    TextView textView1 = null;
+//                    TextView t = null;
+//
+//        for(int columns1 = 0; columns1 < arrayData1.getJSONArray(columns).length(); columns1++) {
+//
+//            System.out.print(arrayData1.getJSONArray(columns).getString(columns1));
+//
+//
+//                textView1 = new TextView(this);
+//                textView1.setLayoutParams(layoutParams);
+//                textView1.setText(arrayData1.getJSONArray(columns).getString(columns1)); //get data from db and set here
+//                textView1.setTextColor(getColor(android.R.color.holo_red_dark));
+//                textView1.setBackgroundResource(R.drawable.background_style);
+//                textView1.setPadding(20, 20, 20, 20);
+//                horizalLinear.addView(textView1);
+//                    }
+//                }
+//            linearLayout.addView(horizalLinear);
+//        }
+//    }
+
+//    JSONObject dataa;
+//    JSONArray arrayData1 ;
+//    @SuppressLint("Range")
+//    private void ReadTableData() throws JSONException {
+//        Cursor c = sqliteDB.ReadTableData();
+//        c.getCount();
+//        c.getColumnCount();
+//        Log.v("","getCount : "+ c.getCount() + " : columns : "+ c.getColumnCount());
+//
+//        if (c.getCount() != 0) {
+//            c.moveToNext();
+//            dataa  = new JSONObject();
+//            arrayData1 = new JSONArray();
+//
+//                for(int i = 0 ; i < c.getCount(); i++){
+//                    JSONArray arrayData = new JSONArray();
+//                    for(int j = 0; j < c.getColumnCount() ; j++) {
+//                        arrayData.put(c.getString(j));
+//                    }
+//                    c.moveToNext();
+//                    arrayData1.put(arrayData);
+//
+//                }
+//            Log.d("adfasdc",arrayData1.toString() );
+//
+//        }
+//    }
+
+    private void ReadTableNames() {
+        ReadTables.setVisibility(View.VISIBLE);
+        Cursor c = sqliteDB.readTableNames();
+        ArrayList<String> arrTblNames = new ArrayList<String>();
+
+        if (c.moveToFirst()) {
+            while (!c.isAfterLast()) {
+                arrTblNames.add(c.getString(0));
+                ReadTables.setText(c.getString(0));
+                c.moveToNext();
+            }
+        }
+       Log.v("","TableNames :"+arrTblNames);
     }
 
 
@@ -298,7 +416,7 @@ public class MainActivity extends AppCompatActivity {
             if (res.moveToNext()) {
                 String Name = res.getString(1);
                 String Mail = res.getString(5);
-
+                
                 ReadName.setText(Name);
                 ReadMail.setText(Mail);
             }
@@ -333,6 +451,15 @@ public class MainActivity extends AppCompatActivity {
             password.setText("");
 
         }
+    }
+
+
+    public void Tabl2Data() {
+        String fname = firstname.getText().toString();
+        String email = mail.getText().toString();
+        String phone = phonenumber.getText().toString();
+        //*** SQLite data store code **//
+        sqliteDB.addTable2Data(fname, phone, email);
     }
 
 

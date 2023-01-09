@@ -10,6 +10,7 @@ import android.os.Environment;
 public class RegisterDB extends SQLiteOpenHelper {
     public static final String DATABASE_NAME = "testDB.db";
     public static final String TABLE_NAME = "RegisterData";
+    public static final String TABLE_NAME1 = "StudentData";
     public static final String FilePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS)+"/SignUpDatabase/"+DATABASE_NAME;
     public static final String COL_1 = "ID";
     public static final String COL_2 = "FIRSTNAME";
@@ -18,6 +19,7 @@ public class RegisterDB extends SQLiteOpenHelper {
     public static final String COL_5 = "EMAIL";
     public static final String COL_6 = "PASS";
 
+    SQLiteDatabase dbRead = this.getReadableDatabase();
 
     public RegisterDB(Context context){
 
@@ -28,12 +30,25 @@ public class RegisterDB extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(" Create table " + TABLE_NAME + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, FIRSTNAME TEXT, FATHERNAME TEXT,PHONE TEXT, EMAIL TEXT, PASS TEXT)" );
+        db.execSQL(" Create table " + TABLE_NAME1 + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, FIRSTNAME TEXT,PHONE TEXT, EMAIL TEXT)" );
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_NAME + "'");
+        db.execSQL("DROP TABLE IF EXISTS '" + TABLE_NAME1 + "'");
         onCreate(db);
+    }
+
+    public void addTable2Data(String FIRSTNAME, String PHONE, String EMAIL){
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues co= new ContentValues();
+
+        co.put(COL_2,FIRSTNAME);
+        co.put(COL_4,PHONE);
+        co.put(COL_5,EMAIL);
+        db.insert(TABLE_NAME1,null,co);
+        db.close();
     }
 
     public void addEmpData(String FIRSTNAME, String FATHERNAME, String PHONE , String EMAIL , String PASS){
@@ -51,8 +66,28 @@ public class RegisterDB extends SQLiteOpenHelper {
     }
 
     public Cursor readData(String phone){
-        SQLiteDatabase db = this.getReadableDatabase();
-        return db.query(TABLE_NAME,null,"PHONE = ? ",new String[]{phone},null,null,null);
+        return dbRead.query(TABLE_NAME,null,"PHONE = ? ",new String[]{phone},null,null,null);
+    }
+
+    /** Read TableNames **/
+    public Cursor readTableNames(){
+        return dbRead.rawQuery("SELECT name FROM sqlite_master WHERE type='table'  AND (name NOT LIKE 'sqlite_sequence' AND name NOT LIKE 'android_metadata')", null);
+    }
+
+//    public Cursor ReadTable_ColumnNames(){
+//        SQLiteDatabase db = this.getReadableDatabase();
+//        return db.query(TABLE_NAME,null,null,null,null,null,null);
+//    }
+
+    /** Read Table ColumnNames **/
+    public Cursor ReadTable_ColumnNames(){
+        return dbRead.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE 0 " ,null);
+    }
+
+
+    /** Read Entire Table Data **/
+    public Cursor ReadTableData(){
+        return dbRead.rawQuery("SELECT * FROM "+TABLE_NAME,null);
     }
 
 
