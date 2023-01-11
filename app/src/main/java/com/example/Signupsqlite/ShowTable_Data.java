@@ -5,13 +5,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.Scroller;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -32,7 +35,8 @@ public class ShowTable_Data extends AppCompatActivity {
 //    String[] items = new String[] {"Default", TABLE_NAME, TABLE_NAME1};
 
         public List<String> GetTableNames;
-
+        Spinner tableSelection;
+        ArrayAdapter<String> GetTableList;
         @SuppressLint("MissingInflatedId")
         @Override
         protected void onCreate(Bundle savedInstanceState) {
@@ -51,8 +55,8 @@ public class ShowTable_Data extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            Spinner tableSelection = findViewById(R.id.spinner);
-            ArrayAdapter<String> GetTableList = new ArrayAdapter<>( ShowTable_Data.this,android.R.layout.simple_spinner_item, GetTableNames);
+            tableSelection = findViewById(R.id.spinner);
+            GetTableList = new ArrayAdapter<>( ShowTable_Data.this,android.R.layout.simple_spinner_item, GetTableNames);
             GetTableList.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             tableSelection.setAdapter(GetTableList);
 
@@ -128,7 +132,7 @@ public class ShowTable_Data extends AppCompatActivity {
 
             Cursor c = sqliteDB.readTableNames();
             GetTableNames = new ArrayList<>();
-            GetTableNames.add("Select");
+            GetTableNames.add("Select-Table");
             for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 for (int i = 0; i < c.getCount()-1; i++) {
                     GetTableNames.add(c.getString(i));
@@ -160,7 +164,6 @@ public class ShowTable_Data extends AppCompatActivity {
 
            MainLayout = findViewById(R.id.MainLinearLayout);
             LinearLayout.LayoutParams MainlayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            Log.v("","MainLayoout Vi123ew : "+MainLayout);
             if(MainLayout != null) {
                 Log.v("","MainLayoout View");
                 MainLayout.removeAllViews();
@@ -171,9 +174,11 @@ public class ShowTable_Data extends AppCompatActivity {
 //            for(int column=0; column<arraydata.length() ;column++) {  //column
                 horizalLinear = new LinearLayout(this);
                 horizalLinear.setOrientation(LinearLayout.HORIZONTAL);
+
                 LinearLayout.LayoutParams ChildlayoutParams = new LinearLayout.LayoutParams(230, ViewGroup.LayoutParams.WRAP_CONTENT);
-                ChildlayoutParams.setMargins(10, 10, 10, 10);
+                ChildlayoutParams.setMargins(5, 5, 5, 5);
                 horizalLinear.setLayoutParams(MainlayoutParams);
+//                horizalLinear.setGravity(Gravity.CENTER | Gravity.CENTER_VERTICAL);
 
                 TextView textView1;
                 for (int columns = 0; columns < arraydata.getJSONArray(rows).length(); columns++) {
@@ -185,6 +190,7 @@ public class ShowTable_Data extends AppCompatActivity {
                         textView1.setText(arraydata.getJSONArray(rows).getString(columns)); //get data from db and set here
                         textView1.setTextColor(getColor(R.color.black));
                         textView1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                        textView1.setTextSize(16);
                         textView1.setBackgroundResource(R.drawable.background_headers);
                         textView1.setPadding(20, 20, 20, 20);
                         horizalLinear.addView(textView1);
@@ -194,7 +200,10 @@ public class ShowTable_Data extends AppCompatActivity {
                         textView1.setText(arraydata.getJSONArray(rows).getString(columns)); //get data from db and set here
                         textView1.setTextColor(getColor(android.R.color.holo_green_dark));
                         textView1.setBackgroundResource(R.drawable.background_style);
-                        textView1.setPadding(20, 20, 20, 20);
+                        textView1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                        textView1.setGravity(Gravity.CENTER | Gravity.CENTER_VERTICAL);
+                        textView1.setTextSize(16);
+                        textView1.setPadding(10, 10, 10, 10);
                         horizalLinear.addView(textView1);
                     }
                 }
@@ -241,6 +250,16 @@ public class ShowTable_Data extends AppCompatActivity {
             return arrayData1;
         }
 
+
+//    @Override
+//    protected void onResume() {
+//        super.onResume();
+//        if (MainLayout != null) {
+//            MainLayout.removeAllViews();
+//            MainLayout =null;
+//            tableSelection.setAdapter(GetTableList);
+//        }
+//    }
 }
 
 

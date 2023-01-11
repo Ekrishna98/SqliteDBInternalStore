@@ -252,7 +252,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * Import .db file into existing Folder (Manual enter path)
-     * **/
+
     private void importDB() {
         File currentDB = new File(DB_NEWPATH);
         if (currentDB.exists()) {
@@ -276,7 +276,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "File Not Found Directory !", Toast.LENGTH_SHORT).show();
         }
     }
-
+     **/
 
 
     /**
