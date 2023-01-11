@@ -19,8 +19,6 @@ public class RegisterDB extends SQLiteOpenHelper {
     public static final String COL_5 = "EMAIL";
     public static final String COL_6 = "PASS";
 
-    SQLiteDatabase dbRead = this.getReadableDatabase();
-
     public RegisterDB(Context context){
 
         super(context, FilePath , null, 1);
@@ -66,12 +64,14 @@ public class RegisterDB extends SQLiteOpenHelper {
     }
 
     public Cursor readData(String phone){
+        SQLiteDatabase dbRead = this.getReadableDatabase();
         return dbRead.query(TABLE_NAME,null,"PHONE = ? ",new String[]{phone},null,null,null);
     }
 
     /** Read TableNames **/
     public Cursor readTableNames(){
-        return dbRead.rawQuery("SELECT name FROM sqlite_master WHERE type='table'  AND (name NOT LIKE 'sqlite_sequence' AND name NOT LIKE 'android_metadata')", null);
+        SQLiteDatabase dbRead = this.getReadableDatabase();
+    return dbRead.rawQuery("SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('android_metadata', 'sqlite_sequence', 'room_master_table')", null);
     }
 
 //    public Cursor ReadTable_ColumnNames(){
@@ -80,14 +80,16 @@ public class RegisterDB extends SQLiteOpenHelper {
 //    }
 
     /** Read Table ColumnNames **/
-    public Cursor ReadTable_ColumnNames(){
-        return dbRead.rawQuery("SELECT * FROM "+TABLE_NAME+" WHERE 0 " ,null);
+    public Cursor ReadTable_ColumnNames(Object item){
+        SQLiteDatabase dbRead = this.getReadableDatabase();
+        return dbRead.rawQuery("SELECT * FROM "+item+" WHERE 0 " ,null);
     }
 
 
     /** Read Entire Table Data **/
-    public Cursor ReadTableData(){
-        return dbRead.rawQuery("SELECT * FROM "+TABLE_NAME,null);
+    public Cursor ReadTableData(Object item){
+        SQLiteDatabase dbRead = this.getReadableDatabase();
+        return dbRead.rawQuery("SELECT * FROM "+item,null);
     }
 
 

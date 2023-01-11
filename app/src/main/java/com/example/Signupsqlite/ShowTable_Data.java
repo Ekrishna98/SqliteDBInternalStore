@@ -1,10 +1,8 @@
 package com.example.Signupsqlite;
 
-import static com.example.Signupsqlite.RegisterDB.TABLE_NAME;
-import static com.example.Signupsqlite.RegisterDB.TABLE_NAME1;
-
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -12,6 +10,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -21,110 +20,204 @@ import com.example.signupsqlite.R;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class ShowTable_Data extends AppCompatActivity {
 
-    JSONObject dataa;
-    JSONArray arrayData1 ;
+        Button ClearData;
+        RegisterDB sqliteDB;
+//    String[] items = new String[] {"Default", TABLE_NAME, TABLE_NAME1};
 
-    RegisterDB sqliteDB;
-    String[] items = new String[] {"Default", TABLE_NAME, TABLE_NAME1};
-    ArrayList<String> arrTblNames;
+        public List<String> GetTableNames;
 
-    String[] temp;
-    String str;
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_show_table_data);
+        @SuppressLint("MissingInflatedId")
+        @Override
+        protected void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            setContentView(R.layout.activity_show_table_data);
 
-        sqliteDB = new RegisterDB(ShowTable_Data.this);
-        Spinner spinner = (Spinner) findViewById(R.id.spinner);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(ShowTable_Data.this,android.R.layout.simple_spinner_item, items);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinner.setAdapter(adapter);
+            getSupportActionBar().setTitle("Show Table Data");
 
-//        GetColumNames();
+            sqliteDB = new RegisterDB(ShowTable_Data.this);
+            ClearData = findViewById(R.id.BtnClear);
 
-        try {
-            GetTabelNames();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+            try {
+                GetTabelNames();
 
-        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                Object item = parent.getItemAtPosition(position);
-                if(item == TABLE_NAME) {
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Spinner tableSelection = findViewById(R.id.spinner);
+            ArrayAdapter<String> GetTableList = new ArrayAdapter<>( ShowTable_Data.this,android.R.layout.simple_spinner_item, GetTableNames);
+            GetTableList.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            tableSelection.setAdapter(GetTableList);
+
+            //        GetColumNames();
+
+
+            tableSelection.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    Object item = parent.getItemAtPosition(position);
+                    Log.v("","krishna item Names: "+item);
                     try {
-                        ShowData_From_Table();
-                    } catch (JSONException e) {
+                        if(position>0) {
+                                ShowData_From_Table(item);
+                            }else{
+                            if(MainLayout != null){
+                                MainLayout.removeAllViews();
+                            }
+                        }
+                    }
+                    catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    Toast.makeText(ShowTable_Data.this, "click on", Toast.LENGTH_SHORT).show();
-                }else {
-                    if (item == TABLE_NAME1) {
-                        Toast.makeText(ShowTable_Data.this, "Krishna", Toast.LENGTH_SHORT).show();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+
+                }
+            });
+
+
+            ClearData.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (MainLayout != null) {
+                        MainLayout.removeAllViews();
+                        MainLayout =null;
+                        tableSelection.setAdapter(GetTableList);
+                    }else {
+                        Log.v("","ClearData :");
+                        Toast.makeText(ShowTable_Data.this, "Please get Data First!...", Toast.LENGTH_SHORT).show();
                     }
                 }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-    }
-
-    private void GetTabelNames() throws JSONException {
-
-        Cursor c = sqliteDB.readTableNames();
-        arrTblNames = new ArrayList<String>();
-
-
-        if (c.moveToFirst()) {
-            while (!c.isAfterLast()) {
-                arrTblNames.add(c.getString(0));
-                c.moveToNext();
-            }
-        }
-        Log.v("","krishna table Names: "+arrTblNames.toString());
-    }
-
-    private void GetColumNames() {
-            Cursor c = sqliteDB.ReadTable_ColumnNames();
-            String[] columnNames;
-            try {
-                columnNames = c.getColumnNames();
-            } finally {
-                c.close();
-            }
-
-            Log.v("", "Krishna columnNames: " + Arrays.toString(columnNames));
+            });
 
 
         }
 
+            /** Another Way Get Table Names
+             *
+        //    private void GetTabelNames() throws JSONException {
+        //
+        //        Cursor c = sqliteDB.readTableNames();
+        //        arrTblNames = new ArrayList<String>();
+        //
+        //        String[] table = null;
+        //
+        //
+        //        if (c.moveToFirst()) {
+        //            while (!c.isAfterLast()) {
+        //                arrTblNames.add(c.getString(0));
+        //                c.moveToNext();
+        //            }
+        //        }
+        //
+        //        Log.v("","krishna table Names: "+arrTblNames.toString());
+        //    }
+            **/
 
-        private void ReadTableData() throws JSONException {
 
-            dataa  = new JSONObject();
-            arrayData1 = new JSONArray();
+        private void GetTabelNames() throws JSONException {
 
-            Cursor c = sqliteDB.ReadTableData();
-            Cursor c1 = sqliteDB.ReadTable_ColumnNames();
+            Cursor c = sqliteDB.readTableNames();
+            GetTableNames = new ArrayList<>();
+            GetTableNames.add("Select");
+            for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+                for (int i = 0; i < c.getCount()-1; i++) {
+                    GetTableNames.add(c.getString(i));
+                }
+            }
+            Log.v("", "krishna table Names: " + GetTableNames);
+        }
+
+            /** GetAll Table Column Names
+             *
+        //    private void GetColumNames(Object item) {
+        //            Cursor c = sqliteDB.ReadTable_ColumnNames(item);
+        //            String[] columnNames;
+        //            try {
+        //                columnNames = c.getColumnNames();
+        //            } finally {
+        //                c.close();
+        //            }
+        //            Log.v("", "Krishna columnNames: " + Arrays.toString(columnNames));
+        //        }
+                    **/
+
+        LinearLayout MainLayout;
+
+     private void ShowData_From_Table(Object item) throws JSONException {
+            JSONArray arraydata =ReadTableData(item);
+
+            MainLayout =null ;
+
+           MainLayout = findViewById(R.id.MainLinearLayout);
+            LinearLayout.LayoutParams MainlayoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            Log.v("","MainLayoout Vi123ew : "+MainLayout);
+            if(MainLayout != null) {
+                Log.v("","MainLayoout View");
+                MainLayout.removeAllViews();
+            }
+
+             LinearLayout horizalLinear;
+            for (int rows = 0; rows < arraydata.length(); rows++) {  //rows
+//            for(int column=0; column<arraydata.length() ;column++) {  //column
+                horizalLinear = new LinearLayout(this);
+                horizalLinear.setOrientation(LinearLayout.HORIZONTAL);
+                LinearLayout.LayoutParams ChildlayoutParams = new LinearLayout.LayoutParams(230, ViewGroup.LayoutParams.WRAP_CONTENT);
+                ChildlayoutParams.setMargins(10, 10, 10, 10);
+                horizalLinear.setLayoutParams(MainlayoutParams);
+
+                TextView textView1;
+                for (int columns = 0; columns < arraydata.getJSONArray(rows).length(); columns++) {
+                    System.out.print(arraydata.getJSONArray(rows).getString(columns));
+
+                    if (rows == 0) {
+                        textView1 = new TextView(this);
+                        textView1.setLayoutParams(ChildlayoutParams);
+                        textView1.setText(arraydata.getJSONArray(rows).getString(columns)); //get data from db and set here
+                        textView1.setTextColor(getColor(R.color.black));
+                        textView1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                        textView1.setBackgroundResource(R.drawable.background_headers);
+                        textView1.setPadding(20, 20, 20, 20);
+                        horizalLinear.addView(textView1);
+                    } else {
+                        textView1 = new TextView(this);
+                        textView1.setLayoutParams(ChildlayoutParams);
+                        textView1.setText(arraydata.getJSONArray(rows).getString(columns)); //get data from db and set here
+                        textView1.setTextColor(getColor(android.R.color.holo_green_dark));
+                        textView1.setBackgroundResource(R.drawable.background_style);
+                        textView1.setPadding(20, 20, 20, 20);
+                        horizalLinear.addView(textView1);
+                    }
+                }
+                //        }
+                MainLayout.addView(horizalLinear);
+            }
+
+     }
+
+        private JSONArray ReadTableData(Object item) throws JSONException {
+
+            JSONArray arrayData1 = new JSONArray();
+
+            Cursor c = sqliteDB.ReadTableData(item);
+            Cursor c1 = sqliteDB.ReadTable_ColumnNames(item);
+
             String[] columnNames;
             try {
                 columnNames = c1.getColumnNames();
             } finally {
                 c1.close();
             }
-            Log.v("", "Krishna columnNames: " + Arrays.toString(columnNames));
+            Log.v("", "Table columnNames: " + Arrays.toString(columnNames));
 
             c.getCount();
             c.getColumnCount();
@@ -132,81 +225,26 @@ public class ShowTable_Data extends AppCompatActivity {
 
             if (c.getCount() != 0) {
                 c.moveToNext();
-
                 JSONArray arrayColumn = new JSONArray(columnNames);
                 arrayData1.put(arrayColumn);
 
-                    for (int i = 0; i < c.getCount(); i++) {
-                        JSONArray arrayData = new JSONArray();
-                        for (int j = 0; j < c.getColumnCount(); j++) {
-                            arrayData.put(c.getString(j));
-                        }
-                        c.moveToNext();
-                        arrayData1.put(arrayData);
+                for (int i = 0; i < c.getCount(); i++) {
+                    JSONArray arrayData = new JSONArray();
+                    for (int j = 0; j < c.getColumnCount(); j++) {
+                        arrayData.put(c.getString(j));
                     }
-                    Log.d("adfasdc", arrayData1.toString());
-
-            }
-
-
-    }
-
-    private void ShowData_From_Table() throws JSONException {
-        try {
-            ReadTableData();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.LinearTxtView);
-        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.setMargins(10, 10, 10, 10);
-
-        LinearLayout horizalLinear=null;
-
-
-        for (int rows = 0; rows < arrayData1.length(); rows++) {  //rows
-
-//            for(int column=0; column<arrayData1.length() ;column++) {  //column
-
-                horizalLinear=new LinearLayout(this);
-                horizalLinear.setOrientation(LinearLayout.HORIZONTAL);
-
-                TextView textView1 = null;
-
-                for(int columns = 0; columns < arrayData1.getJSONArray(rows).length(); columns++) {
-
-                    System.out.print(arrayData1.getJSONArray(rows).getString(columns));
-
-                    if(rows == 0){
-                        textView1 = new TextView(this);
-                        textView1.setLayoutParams(layoutParams);
-                        textView1.setText(arrayData1.getJSONArray(rows).getString(columns)); //get data from db and set here
-                        textView1.setTextColor(getColor(android.R.color.holo_red_dark));
-                        textView1.setBackgroundResource(R.drawable.background_style);
-                        textView1.setPadding(20, 20, 20, 20);
-                        horizalLinear.addView(textView1);
-                    }
-                    else {
-                        textView1 = new TextView(this);
-                        textView1.setLayoutParams(layoutParams);
-                        textView1.setText(arrayData1.getJSONArray(rows).getString(columns)); //get data from db and set here
-                        textView1.setTextColor(getColor(android.R.color.holo_green_dark));
-                        textView1.setBackgroundResource(R.drawable.background_style);
-                        textView1.setPadding(20, 20, 20, 20);
-                        horizalLinear.addView(textView1);
-                    }
+                    c.moveToNext();
+                    arrayData1.put(arrayData);
                 }
-
-//            }
-
-            linearLayout.addView(horizalLinear);
+                Log.d("adfasdc", arrayData1.toString());
+            }
+            return arrayData1;
         }
-    }
+
 }
 
 
-/**
+        /**
 
          public void getDatabaseStructure(SQLiteDatabase db) {
 

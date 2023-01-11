@@ -1,7 +1,5 @@
 package com.example.Signupsqlite;
 
-
-
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -17,20 +15,12 @@ import android.os.Environment;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.signupsqlite.R;
-import com.google.firebase.crashlytics.buildtools.reloc.com.google.common.io.Files;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -38,8 +28,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
     EditText EnterPhone;
     Button button_register, buttonReadData, importDBFile, exportDB, ShowTableData;
     RegisterDB sqliteDB;
-    TextView ReadName, ReadMail, ReadTables;
+    TextView ReadName, ReadMail;
 
     int PERMISSION_CODE = 100;
     int PICKFILE_RESULT_CODE = 1001;
@@ -74,7 +62,6 @@ public class MainActivity extends AppCompatActivity {
 
         ReadName = findViewById(R.id.tvName);
         ReadMail = findViewById(R.id.tvmail);
-        ReadTables = findViewById(R.id.tvTables);
         importDBFile = findViewById(R.id.buttonGetFile);
         exportDB = findViewById(R.id.buttonExpoortDB);
         ShowTableData = findViewById(R.id.ShowTableData);
@@ -85,11 +72,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
 
                 startActivity(new Intent(MainActivity.this,ShowTable_Data.class));
-//                try {
-//                    DisplayTable();
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
             }
         });
 
@@ -134,8 +116,27 @@ public class MainActivity extends AppCompatActivity {
         button_register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Tabl2Data();
-                Submit();
+                String fname = firstname.getText().toString();
+                String fatherName = fathername.getText().toString();
+                String email = mail.getText().toString();
+                String phone = phonenumber.getText().toString();
+                String pass = password.getText().toString();
+
+                if (fname.isEmpty()  || fatherName.isEmpty() || email.isEmpty() || phone.isEmpty() || pass.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "please enter all the data...", Toast.LENGTH_SHORT).show();
+                } else {
+//                    Submit();
+//                    Table2Data();
+
+                    Submit(fname,fatherName,email,phone,pass);
+                    Tabl2Data(fname,phone,email);
+
+                    firstname.setText("");
+                    fathername.setText("");
+                    mail.setText("");
+                    phonenumber.setText("");
+                    password.setText("");
+                }
             }
         });
 
@@ -144,114 +145,31 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (!currentDB.exists()) {
                     Toast.makeText(MainActivity.this, "File Not Found ", Toast.LENGTH_SHORT).show();
-                    return;
                 } else {
                     ReadData();
-                    ReadTableNames();
-                    ReadTable_ColumnNames();
-//                    try {
-////                        ReadTableData();
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
                 }
             }
         });
 
-    }
+      }
 
-    private void ReadTable_ColumnNames() {
-        Cursor c = sqliteDB.ReadTable_ColumnNames();
-        String[] columnNames;
-        try {
-            columnNames = c.getColumnNames();
-        } finally {
-            c.close();
+    /**
+     * Store User Data into Local .DB (RegisterData table (1))
+     * **/
+        private void Submit(String fname, String fatherName, String email, String phone, String pass) {
+            //*** SQLite data store code **//
+            sqliteDB.addEmpData(fname, fatherName, phone, email, pass);
+            Toast.makeText(this, "Register Details added to sqliteDB", Toast.LENGTH_SHORT).show();
+
         }
 
-        Log.v("", "Krishna: " + Arrays.toString(columnNames));
-    }
-
-//    private void DisplayTable() throws JSONException {
-//
-//        LinearLayout linearLayout = (LinearLayout) findViewById(R.id.LinearTxtView);
-//        LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(200, ViewGroup.LayoutParams.WRAP_CONTENT);
-//        layoutParams.setMargins(10, 10, 10, 10);
-//
-//        LinearLayout horizalLinear=null;
-//
-//
-//        for (int columns = 0; columns < arrayData1.length(); columns++) {  //columns
-//
-//                for(int rows=0; rows<arrayData1.length() ;rows++) {  //rows
-//
-//                    horizalLinear=new LinearLayout(this);
-//                    horizalLinear.setOrientation(LinearLayout.HORIZONTAL);
-//
-//                    TextView textView1 = null;
-//                    TextView t = null;
-//
-//        for(int columns1 = 0; columns1 < arrayData1.getJSONArray(columns).length(); columns1++) {
-//
-//            System.out.print(arrayData1.getJSONArray(columns).getString(columns1));
-//
-//
-//                textView1 = new TextView(this);
-//                textView1.setLayoutParams(layoutParams);
-//                textView1.setText(arrayData1.getJSONArray(columns).getString(columns1)); //get data from db and set here
-//                textView1.setTextColor(getColor(android.R.color.holo_red_dark));
-//                textView1.setBackgroundResource(R.drawable.background_style);
-//                textView1.setPadding(20, 20, 20, 20);
-//                horizalLinear.addView(textView1);
-//                    }
-//                }
-//            linearLayout.addView(horizalLinear);
-//        }
-//    }
-
-//    JSONObject dataa;
-//    JSONArray arrayData1 ;
-//    @SuppressLint("Range")
-//    private void ReadTableData() throws JSONException {
-//        Cursor c = sqliteDB.ReadTableData();
-//        c.getCount();
-//        c.getColumnCount();
-//        Log.v("","getCount : "+ c.getCount() + " : columns : "+ c.getColumnCount());
-//
-//        if (c.getCount() != 0) {
-//            c.moveToNext();
-//            dataa  = new JSONObject();
-//            arrayData1 = new JSONArray();
-//
-//                for(int i = 0 ; i < c.getCount(); i++){
-//                    JSONArray arrayData = new JSONArray();
-//                    for(int j = 0; j < c.getColumnCount() ; j++) {
-//                        arrayData.put(c.getString(j));
-//                    }
-//                    c.moveToNext();
-//                    arrayData1.put(arrayData);
-//
-//                }
-//            Log.d("adfasdc",arrayData1.toString() );
-//
-//        }
-//    }
-
-    private void ReadTableNames() {
-        ReadTables.setVisibility(View.VISIBLE);
-        Cursor c = sqliteDB.readTableNames();
-        ArrayList<String> arrTblNames = new ArrayList<String>();
-
-        if (c.moveToFirst()) {
-            while (!c.isAfterLast()) {
-                arrTblNames.add(c.getString(0));
-                ReadTables.setText(c.getString(0));
-                c.moveToNext();
-            }
+    /**
+     * Store User Data into Local .DB (Student table (2))
+     * **/
+        public void Tabl2Data(String fname,String phone, String email){
+            //*** SQLite data store code **//
+            sqliteDB.addTable2Data(fname, phone, email);
         }
-       Log.v("","TableNames :"+arrTblNames);
-    }
-
 
     /**
      * Import .db file into existing Folder (using file picker)
@@ -312,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-    private boolean checkPermissions() {
+    private void checkPermissions() {
 
         // If you have access to the external storage, do whatever you need
         if (Environment.isExternalStorageManager()) {
@@ -326,12 +244,9 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         }
 
-
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            return true;
         } else {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, PERMISSION_CODE);
-            return false;
         }
     }
 
@@ -341,8 +256,8 @@ public class MainActivity extends AppCompatActivity {
     private void importDB() {
         File currentDB = new File(DB_NEWPATH);
         if (currentDB.exists()) {
-            FileChannel source = null;
-            FileChannel destination = null;
+            FileChannel source ;
+            FileChannel destination ;
 
             File backupDB = new File(DB_PATH);
             Log.v("Before import", "Before import");
@@ -364,14 +279,13 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-
     /**
      * Export .db file into New Folder
      * **/
     private void exportDB1() {
 
-        FileChannel source = null;
-        FileChannel destination = null;
+        FileChannel source ;
+        FileChannel destination;
 
         if (currentDB.exists()) {
             Log.v("Before export", "Before export");
@@ -396,7 +310,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
     /**
      * Get Name & Mail From .db check PhoneNumber
      * **/
@@ -404,14 +317,12 @@ public class MainActivity extends AppCompatActivity {
         String phone = EnterPhone.getText().toString();
         Cursor res = sqliteDB.readData(phone);
 
-
         if(phone.isEmpty()){
             Toast.makeText(this, "Please Enter PhoneNumber", Toast.LENGTH_SHORT).show();
         }
         if (res.getCount() == 0) {
             EnterPhone.setError("Invalid PhoneNumber!..");
             EnterPhone.requestFocus();
-            return;
         } else {
             if (res.moveToNext()) {
                 String Name = res.getString(1);
@@ -422,44 +333,6 @@ public class MainActivity extends AppCompatActivity {
             }
             EnterPhone.setText("");
         }
-    }
-
-
-
-    /**
-     * Store User Data into DB file
-     * **/
-    public void Submit() {
-        String fname = firstname.getText().toString();
-        String fatherName = fathername.getText().toString();
-        String email = mail.getText().toString();
-        String phone = phonenumber.getText().toString();
-        String pass = password.getText().toString();
-
-        if (fname.isEmpty()  || fatherName.isEmpty() || email.isEmpty() || phone.isEmpty() || pass.isEmpty()) {
-            Toast.makeText(this, "please enter all the data...", Toast.LENGTH_SHORT).show();
-            return;
-        } else {
-
-            //*** SQLite data store code **//
-            sqliteDB.addEmpData(fname, fatherName, phone, email, pass);
-            Toast.makeText(this, "Register Details added to sqliteDB", Toast.LENGTH_SHORT).show();
-            firstname.setText("");
-            fathername.setText("");
-            mail.setText("");
-            phonenumber.setText("");
-            password.setText("");
-
-        }
-    }
-
-
-    public void Tabl2Data() {
-        String fname = firstname.getText().toString();
-        String email = mail.getText().toString();
-        String phone = phonenumber.getText().toString();
-        //*** SQLite data store code **//
-        sqliteDB.addTable2Data(fname, phone, email);
     }
 
 
@@ -474,58 +347,74 @@ public class MainActivity extends AppCompatActivity {
 
 
 
+    /**
+     * Store User Data into DB file
+     *
+    public void Submit() {
+        String fname = firstname.getText().toString();
+        String fatherName = fathername.getText().toString();
+        String email = mail.getText().toString();
+        String phone = phonenumber.getText().toString();
+        String pass = password.getText().toString();
+
+        if (fname.isEmpty()  || fatherName.isEmpty() || email.isEmpty() || phone.isEmpty() || pass.isEmpty()) {
+            Toast.makeText(this, "please enter all the data...", Toast.LENGTH_SHORT).show();
+        } else {
+            sqliteDB.addEmpData(fname, fatherName, phone, email, pass);
+            Toast.makeText(this, "Register Details added to sqliteDB", Toast.LENGTH_SHORT).show();
+            firstname.setText("");
+            fathername.setText("");
+            mail.setText("");
+            phonenumber.setText("");
+            password.setText("");
+
+        }
+    }
 
 
+//    public void Table2Data() {
+//        String fname = firstname.getText().toString();
+//        String email = mail.getText().toString();
+//        String phone = phonenumber.getText().toString();
+//        if (fname.isEmpty() || email.isEmpty() || phone.isEmpty()){
+//
+//        }else {
+//            sqliteDB.addTable2Data(fname, phone, email);
+//        }
+//    }
+    **/
 
 
+    /**
+     * Another way to Export File
 
+          private void exportDB2() {
+          File currentDB = new File(DB_PATH);
+          File backupDB = new File(DB_NEWPATH);
+          if(currentDB.exists()) {
+          try {
+          InputStream inputStream = new FileInputStream(currentDB);
+          OutputStream outputStream = new FileOutputStream(backupDB);
 
+          byte[] byteArrayBuffer = new byte[1024];
+          int intLength;
+          while ((intLength = inputStream.read(byteArrayBuffer)) > 0) {
+          outputStream.write(byteArrayBuffer, 0, intLength);
+          }
 
+          inputStream.close();
+          outputStream.close();
 
+         Toast.makeText(this, "Successful !.......", Toast.LENGTH_SHORT).show();
 
-
-
-/**
- * Another way to Export File
- * *****
- * private void exportDB2() {
- * File currentDB = new File(DB_PATH);
- * File backupDB = new File(DB_NEWPATH);
- * if(currentDB.exists()) {
- * try {
- * InputStream inputStream = new FileInputStream(currentDB);
- * OutputStream outputStream = new FileOutputStream(backupDB);
- * <p>
- * byte[] byteArrayBuffer = new byte[1024];
- * int intLength;
- * while ((intLength = inputStream.read(byteArrayBuffer)) > 0) {
- * outputStream.write(byteArrayBuffer, 0, intLength);
- * }
- * <p>
- * inputStream.close();
- * outputStream.close();
- * <p>
- * Toast.makeText(this, "Successful !.......", Toast.LENGTH_SHORT).show();
- * <p>
- * } catch (FileNotFoundException e) {
- * e.printStackTrace();
- * } catch (IOException e) {
- * e.printStackTrace();
- * }
- * }
- * }
- **/
-
-
-
-
-
-
-
-
-
-
-
+          } catch (FileNotFoundException e) {
+          e.printStackTrace();
+          } catch (IOException e) {
+          e.printStackTrace();
+          }
+          }
+          }
+     **/
 
 
 
