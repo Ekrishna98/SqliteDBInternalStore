@@ -192,7 +192,7 @@ public class ShowTable_Data extends AppCompatActivity {
                         textView1.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
                         textView1.setTextSize(16);
                         textView1.setBackgroundResource(R.drawable.background_headers);
-                        textView1.setPadding(20, 20, 20, 20);
+//                        textView1.setPadding(20, 20, 20, 20);
                         horizalLinear.addView(textView1);
                     } else {
                         textView1 = new TextView(this);

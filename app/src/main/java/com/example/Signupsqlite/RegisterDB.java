@@ -86,10 +86,17 @@ public class RegisterDB extends SQLiteOpenHelper {
     }
 
 
+//    /** Read Entire Table Data **/
+//    public Cursor ReadTableData(Object item){
+//        SQLiteDatabase dbRead = this.getReadableDatabase();
+//        return dbRead.rawQuery("SELECT * FROM "+item,null);
+//    }
     /** Read Entire Table Data **/
     public Cursor ReadTableData(Object item){
         SQLiteDatabase dbRead = this.getReadableDatabase();
-        return dbRead.rawQuery("SELECT * FROM "+item,null);
+        String Query = "SELECT * FROM "+item ;
+        Cursor res = dbRead.rawQuery(Query,null);
+        return res;
     }
 
 
